@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보육인의 밤 신청 시스템</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel Standalone for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide React Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in-up {
+            animation: fade-in-up 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Supabase 클라이언트 초기화
+        const supabaseUrl = 'https://skcnxjnoxjdrkcpfqceh.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrY254am5veGpkcmtjcGZxY2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5NzMyMTMsImV4cCI6MjA3NzU0OTIxM30.OcwyqBpiNh0hrJv98ujKbr-rHCdw03fSKtDDq0s7brw';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // 아이콘 컴포넌트들 (간단한 SVG로 대체)
+        const Users = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+        );
+        const Save = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+        );
+        const List = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        );
+        const Trash2 = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+        );
+        const UserPlus = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+        );
+        const BarChart3 = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+        );
+        const Building = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 4h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zm0 0v2a2 2 0 002 2h2a2 2 0 002-2v-2m-6 0h6" />
+            </svg>
+        );
+        const Download = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+        );
+        const FileText = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+        );
+        const Lock = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+        );
+        const LogOut = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+        );
+
+        const ChildcareEventRegistration = () => {
+          // --- 상수 데이터 ---
+          const INSTITUTIONS = [
+            "강상어린이집",
+            "단월 어린이집",
+            "더샵리버포레우리어린이집",
+            "반도유보라 어린이집",
+            "벽산동화속어린이집",
+            "벽산어린이집",
+            "서종어린이집",
+            "양동어린이집",
+            "양서어린이집",
+            "양평꼬마숲어린이집",
+            "양평어린이집",
+            "용문어린이집",
+            "옥천어린이집",
+            "지평어린이집",
+            "청운어린이집",
+            "포레나숲어린이집",
+            "한라별숲어린이집",
+            "한라소담어린이집",
+            "한신꼬마대통령어린이집",
+          ];
+          const POSITIONS = ["원장", "교사", "기타"];
+          const ADMIN_PASSWORD = "k1234";
+          const TABLE_NAME = "childcare_registrations";
+
+          // --- State 관리 ---
+          const [activeTab, setActiveTab] = useState("register"); // 'register' or 'admin'
+          const [registrations, setRegistrations] = useState([]);
+          const [loading, setLoading] = useState(false);
+          
+          // 관리자 인증 State
+          const [isAuthenticated, setIsAuthenticated] = useState(false);
+          const [passwordInput, setPasswordInput] = useState("");
+
+          // 입력 폼 State
+          const [selectedInst, setSelectedInst] = useState(INSTITUTIONS[0]);
+          const [currentName, setCurrentName] = useState("");
+          const [currentPos, setCurrentPos] = useState(POSITIONS[1]); // 기본값 교사
+          const [tempList, setTempList] = useState([]); // 한 번에 제출할 명단 (최대 30명)
+
+          // --- Supabase 데이터 로드 ---
+          const loadRegistrations = async () => {
+            try {
+              setLoading(true);
+              const { data, error } = await supabase
+                .from(TABLE_NAME)
+                .select('*')
+                .order('submitted_at', { ascending: false });
+              
+              if (error) throw error;
+              
+              // Supabase 데이터를 기존 형식으로 변환
+              const formattedData = data.map(item => ({
+                id: item.id,
+                name: item.name,
+                position: item.position,
+                institution: item.institution,
+                submittedAt: item.submitted_at
+              }));
+              
+              setRegistrations(formattedData);
+            } catch (error) {
+              console.error('데이터 로드 오류:', error);
+              alert('데이터를 불러오는 중 오류가 발생했습니다.');
+            } finally {
+              setLoading(false);
+            }
+          };
+
+          // --- 초기 로드 ---
+          useEffect(() => {
+            loadRegistrations();
+          }, []);
+
+          // --- 핸들러 함수들 ---
+
+          // 0. 관리자 로그인 처리
+          const handleAdminLogin = (e) => {
+            e.preventDefault();
+            if (passwordInput === ADMIN_PASSWORD) {
+              setIsAuthenticated(true);
+              setPasswordInput(""); // 입력창 초기화
+            } else {
+              alert("비밀번호가 올바르지 않습니다.");
+            }
+          };
+
+          // 0-1. 로그아웃 처리
+          const handleAdminLogout = () => {
+            setIsAuthenticated(false);
+            setActiveTab("register"); // 로그아웃 시 신청 탭으로 이동
+          };
+
+          // 1. 임시 명단에 추가
+          const addToTempList = () => {
+            if (!currentName.trim()) {
+              alert("이름을 입력해주세요.");
+              return;
+            }
+            if (tempList.length >= 30) {
+              alert("한 번에 최대 30명까지만 입력 가능합니다.");
+              return;
+            }
+            
+            const newItem = {
+              id: Date.now() + Math.random(),
+              name: currentName.trim(),
+              position: currentPos
+            };
+
+            setTempList([...tempList, newItem]);
+            setCurrentName(""); // 이름 입력창 초기화
+          };
+
+          // 2. 임시 명단 삭제
+          const removeFromTempList = (id) => {
+            setTempList(tempList.filter(item => item.id !== id));
+          };
+
+          // 3. 최종 제출 (Supabase 저장)
+          const handleSubmit = async () => {
+            if (tempList.length === 0) {
+              alert("등록할 인원이 없습니다.");
+              return;
+            }
+
+            try {
+              setLoading(true);
+              
+              // Supabase에 저장할 데이터 형식으로 변환
+              const dataToInsert = tempList.map(person => ({
+                institution: selectedInst,
+                name: person.name,
+                position: person.position,
+                submitted_at: new Date().toISOString()
+              }));
+
+              const { data, error } = await supabase
+                .from(TABLE_NAME)
+                .insert(dataToInsert)
+                .select();
+
+              if (error) throw error;
+
+              // 성공적으로 저장된 데이터를 상태에 추가
+              const formattedData = data.map(item => ({
+                id: item.id,
+                name: item.name,
+                position: item.position,
+                institution: item.institution,
+                submittedAt: item.submitted_at
+              }));
+
+              setRegistrations([...registrations, ...formattedData]);
+              setTempList([]);
+              alert(`${selectedInst}의 명단 ${dataToInsert.length}명이 성공적으로 등록되었습니다.`);
+            } catch (error) {
+              console.error('저장 오류:', error);
+              alert('데이터 저장 중 오류가 발생했습니다. 다시 시도해주세요.');
+            } finally {
+              setLoading(false);
+            }
+          };
+
+          // 4. 데이터 전체 초기화 (관리자용)
+          const clearAllData = async () => {
+            if (!window.confirm("정말로 모든 신청 데이터를 삭제하시겠습니까? 복구할 수 없습니다.")) {
+              return;
+            }
+
+            try {
+              setLoading(true);
+              const { error } = await supabase
+                .from(TABLE_NAME)
+                .delete()
+                .neq('id', 0); // 모든 데이터 삭제
+
+              if (error) throw error;
+
+              setRegistrations([]);
+              alert('모든 데이터가 삭제되었습니다.');
+            } catch (error) {
+              console.error('삭제 오류:', error);
+              alert('데이터 삭제 중 오류가 발생했습니다.');
+            } finally {
+              setLoading(false);
+            }
+          };
+
+          // --- 통계 계산 로직 ---
+          const getStats = () => {
+            const stats = {};
+            
+            // 초기화
+            INSTITUTIONS.forEach(inst => {
+              stats[inst] = { 원장: 0, 교사: 0, 기타: 0, 합계: 0, 명단: [] };
+            });
+
+            registrations.forEach(reg => {
+              if (stats[reg.institution]) {
+                stats[reg.institution][reg.position] += 1;
+                stats[reg.institution].합계 += 1;
+                stats[reg.institution].명단.push(reg);
+              }
+            });
+
+            return stats;
+          };
+
+          const statsData = getStats();
+          const totalCount = registrations.length;
+
+          // --- 엑셀(CSV) 다운로드 기능 ---
+          
+          // CSV 생성 및 다운로드 공통 함수
+          const downloadCSV = (csvContent, fileName) => {
+            const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+              const url = URL.createObjectURL(blob);
+              link.setAttribute("href", url);
+              link.setAttribute("download", fileName);
+              link.style.visibility = 'hidden';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }
+          };
+
+          // 1. 집계표 다운로드
+          const handleDownloadStats = () => {
+            const headers = ["기관명", "원장", "교사", "기타", "합계"];
+            const rows = INSTITUTIONS.map(inst => {
+              const d = statsData[inst];
+              return [inst, d.원장, d.교사, d.기타, d.합계].join(",");
+            });
+            
+            const csvContent = [headers.join(","), ...rows].join("\n");
+            downloadCSV(csvContent, `보육인의밤_신청현황_${new Date().toLocaleDateString()}.csv`);
+          };
+
+          // 2. 전체 명단 다운로드
+          const handleDownloadAllData = () => {
+            if (registrations.length === 0) {
+              alert("다운로드할 데이터가 없습니다.");
+              return;
+            }
+            const headers = ["등록일시", "기관명", "직책", "이름"];
+            const rows = registrations.map(reg => {
+              const date = new Date(reg.submittedAt).toLocaleString();
+              return [date, reg.institution, reg.position, reg.name].join(",");
+            });
+
+            const csvContent = [headers.join(","), ...rows].join("\n");
+            downloadCSV(csvContent, `보육인의밤_전체명단_${new Date().toLocaleDateString()}.csv`);
+          };
+
+          return (
+            <div className="min-h-screen bg-gray-50 font-sans text-gray-800 pb-20">
+              {/* 헤더 */}
+              <header className="bg-indigo-600 text-white p-4 shadow-lg sticky top-0 z-10">
+                <div className="max-w-3xl mx-auto flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-6 h-6" />
+                    <h1 className="text-xl font-bold">보육인의 밤 신청 시스템</h1>
+                  </div>
+                  <div className="flex gap-2 text-sm">
+                    <button 
+                      onClick={() => setActiveTab("register")}
+                      className={`px-3 py-1 rounded-full transition ${activeTab === 'register' ? 'bg-white text-indigo-700 font-bold' : 'bg-indigo-500 text-indigo-100 hover:bg-indigo-400'}`}
+                    >
+                      신청하기
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab("admin")}
+                      className={`px-3 py-1 rounded-full transition ${activeTab === 'admin' ? 'bg-white text-indigo-700 font-bold' : 'bg-indigo-500 text-indigo-100 hover:bg-indigo-400'}`}
+                    >
+                      관리자 모드
+                    </button>
+                  </div>
+                </div>
+              </header>
+
+              <main className="max-w-3xl mx-auto p-4 mt-4">
+                
+                {/* === 탭 1: 신청 등록 === */}
+                {activeTab === 'register' && (
+                  <div className="space-y-6 animate-fade-in-up">
+                    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                      <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-gray-700">
+                        <Building className="w-5 h-5 text-indigo-500" />
+                        기관 정보 선택
+                      </h2>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">어린이집(원명)</label>
+                        <select 
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                          value={selectedInst}
+                          onChange={(e) => setSelectedInst(e.target.value)}
+                        >
+                          {INSTITUTIONS.map(inst => (
+                            <option key={inst} value={inst}>{inst}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                      <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-gray-700">
+                        <UserPlus className="w-5 h-5 text-green-500" />
+                        참석자 명단 입력
+                        <span className="text-xs font-normal text-gray-400 ml-auto">최대 30명/회</span>
+                      </h2>
+
+                      <div className="flex flex-col sm:flex-row gap-3 items-end mb-4 bg-gray-50 p-4 rounded-lg">
+                        <div className="flex-1 w-full">
+                          <label className="block text-xs font-medium text-gray-500 mb-1">직책</label>
+                          <select 
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
+                            value={currentPos}
+                            onChange={(e) => setCurrentPos(e.target.value)}
+                          >
+                            {POSITIONS.map(pos => (
+                              <option key={pos} value={pos}>{pos}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex-[2] w-full">
+                          <label className="block text-xs font-medium text-gray-500 mb-1">이름</label>
+                          <input 
+                            type="text"
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
+                            placeholder="이름 입력"
+                            value={currentName}
+                            onChange={(e) => setCurrentName(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && addToTempList()}
+                          />
+                        </div>
+                        <button 
+                          onClick={addToTempList}
+                          className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-medium transition flex justify-center items-center gap-1"
+                        >
+                          추가
+                        </button>
+                      </div>
+
+                      {/* 입력된 명단 미리보기 */}
+                      <div className="mt-4">
+                        <h3 className="text-sm font-semibold text-gray-600 mb-2">
+                          등록 대기 명단 ({tempList.length}명)
+                        </h3>
+                        {tempList.length === 0 ? (
+                          <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                            위에서 정보를 입력하고 '추가' 버튼을 눌러주세요.
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+                            <ul className="divide-y divide-gray-200 max-h-60 overflow-y-auto">
+                              {tempList.map((person, idx) => (
+                                <li key={person.id} className="p-3 flex justify-between items-center bg-white hover:bg-gray-50">
+                                  <div className="flex items-center gap-3">
+                                    <span className="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full font-bold w-6 h-6 flex items-center justify-center">
+                                      {idx + 1}
+                                    </span>
+                                    <span className="font-medium text-gray-800">{person.name}</span>
+                                    <span className={`text-xs px-2 py-0.5 rounded border ${
+                                      person.position === '원장' ? 'border-red-200 bg-red-50 text-red-600' :
+                                      person.position === '교사' ? 'border-blue-200 bg-blue-50 text-blue-600' :
+                                      'border-gray-200 bg-gray-100 text-gray-600'
+                                    }`}>
+                                      {person.position}
+                                    </span>
+                                  </div>
+                                  <button 
+                                    onClick={() => removeFromTempList(person.id)}
+                                    className="text-gray-400 hover:text-red-500 p-1"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-6">
+                        <button 
+                          onClick={handleSubmit}
+                          disabled={tempList.length === 0 || loading}
+                          className={`w-full py-3 rounded-xl text-lg font-bold shadow-lg flex justify-center items-center gap-2 transition ${
+                            tempList.length > 0 && !loading
+                            ? 'bg-green-600 hover:bg-green-700 text-white transform hover:-translate-y-1' 
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          }`}
+                        >
+                          {loading ? (
+                            <>
+                              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              저장 중...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="w-5 h-5" />
+                              최종 신청하기
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* === 탭 2: 관리자 모드 === */}
+                {activeTab === 'admin' && (
+                  <div className="space-y-6 animate-fade-in-up">
+                    
+                    {!isAuthenticated ? (
+                      // --- 로그인 화면 ---
+                      <div className="flex flex-col items-center justify-center py-12 bg-white rounded-xl shadow-md border border-gray-100">
+                        <div className="bg-indigo-100 p-4 rounded-full mb-4">
+                          <Lock className="w-8 h-8 text-indigo-600" />
+                        </div>
+                        <h2 className="text-xl font-bold text-gray-800 mb-2">관리자 인증</h2>
+                        <p className="text-gray-500 text-sm mb-6">신청 현황을 보려면 비밀번호를 입력하세요.</p>
+                        <form onSubmit={handleAdminLogin} className="w-full max-w-xs flex gap-2">
+                          <input 
+                            type="password" 
+                            placeholder="비밀번호 입력" 
+                            className="flex-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                            value={passwordInput}
+                            onChange={(e) => setPasswordInput(e.target.value)}
+                          />
+                          <button 
+                            type="submit"
+                            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 font-medium transition"
+                          >
+                            확인
+                          </button>
+                        </form>
+                      </div>
+                    ) : (
+                      // --- 관리자 대시보드 (로그인 후 보임) ---
+                      <>
+                        <div className="flex justify-between items-center">
+                          <h2 className="text-xl font-bold text-gray-800">관리자 대시보드</h2>
+                          <button 
+                            onClick={handleAdminLogout}
+                            className="flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 transition"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            로그아웃
+                          </button>
+                        </div>
+
+                        {/* 요약 카드 */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-white p-4 rounded-xl shadow border-l-4 border-indigo-500">
+                            <div className="text-gray-500 text-xs font-bold uppercase">총 신청 인원</div>
+                            <div className="text-3xl font-extrabold text-indigo-700 mt-1">{totalCount}명</div>
+                          </div>
+                          <div className="bg-white p-4 rounded-xl shadow border-l-4 border-green-500">
+                            <div className="text-gray-500 text-xs font-bold uppercase">참여 기관 수</div>
+                            <div className="text-3xl font-extrabold text-green-700 mt-1">
+                              {Object.values(statsData).filter(s => s.합계 > 0).length} / {INSTITUTIONS.length}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 다운로드 버튼 그룹 */}
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <button 
+                            onClick={handleDownloadStats}
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg shadow flex items-center justify-center gap-2 transition text-sm font-medium"
+                          >
+                            <Download className="w-4 h-4" />
+                            집계 현황 엑셀 저장
+                          </button>
+                          <button 
+                            onClick={handleDownloadAllData}
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow flex items-center justify-center gap-2 transition text-sm font-medium"
+                          >
+                            <FileText className="w-4 h-4" />
+                            전체 명단 엑셀 저장
+                          </button>
+                        </div>
+
+                        {/* 집계 테이블 */}
+                        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                          <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-gray-700">
+                            <BarChart3 className="w-5 h-5 text-indigo-500" />
+                            기관별 신청 현황
+                          </h2>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-gray-500">
+                              <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+                                <tr>
+                                  <th className="px-4 py-3 rounded-l-lg">기관명</th>
+                                  <th className="px-4 py-3 text-center">원장</th>
+                                  <th className="px-4 py-3 text-center">교사</th>
+                                  <th className="px-4 py-3 text-center">기타</th>
+                                  <th className="px-4 py-3 text-right font-bold rounded-r-lg text-indigo-700">합계</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {INSTITUTIONS.map((inst) => {
+                                  const data = statsData[inst];
+                                  const hasData = data.합계 > 0;
+                                  return (
+                                    <tr key={inst} className={`border-b hover:bg-gray-50 ${hasData ? 'bg-white' : 'bg-gray-50 opacity-60'}`}>
+                                      <td className="px-4 py-3 font-medium text-gray-900">{inst}</td>
+                                      <td className="px-4 py-3 text-center">{data.원장 || '-'}</td>
+                                      <td className="px-4 py-3 text-center">{data.교사 || '-'}</td>
+                                      <td className="px-4 py-3 text-center">{data.기타 || '-'}</td>
+                                      <td className="px-4 py-3 text-right font-bold text-indigo-700">{data.합계}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                              <tfoot className="bg-indigo-50 font-bold text-gray-900">
+                                <tr>
+                                  <td className="px-4 py-3 rounded-l-lg">전체 합계</td>
+                                  <td className="px-4 py-3 text-center">{Object.values(statsData).reduce((a, b) => a + b.원장, 0)}</td>
+                                  <td className="px-4 py-3 text-center">{Object.values(statsData).reduce((a, b) => a + b.교사, 0)}</td>
+                                  <td className="px-4 py-3 text-center">{Object.values(statsData).reduce((a, b) => a + b.기타, 0)}</td>
+                                  <td className="px-4 py-3 text-right rounded-r-lg text-indigo-700">{totalCount}</td>
+                                </tr>
+                              </tfoot>
+                            </table>
+                          </div>
+                        </div>
+
+                        {/* 상세 명단 조회 */}
+                        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                          <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-gray-700">
+                            <List className="w-5 h-5 text-gray-500" />
+                            기관별 상세 명단
+                          </h2>
+                          <div className="space-y-2">
+                            {INSTITUTIONS.map(inst => {
+                              const attendees = statsData[inst].명단;
+                              if (attendees.length === 0) return null;
+                              
+                              return (
+                                <details key={inst} className="group border border-gray-200 rounded-lg bg-gray-50 open:bg-white open:ring-1 open:ring-indigo-100">
+                                  <summary className="flex justify-between items-center font-medium cursor-pointer list-none p-4">
+                                    <span className="flex items-center gap-2">
+                                      <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                      {inst}
+                                    </span>
+                                    <span className="text-gray-500 text-sm bg-white px-2 py-1 rounded border border-gray-200 shadow-sm group-open:bg-indigo-50 group-open:text-indigo-600">
+                                      {attendees.length}명 보기
+                                    </span>
+                                  </summary>
+                                  <div className="text-gray-500 border-t border-gray-100 p-4">
+                                     <div className="flex flex-wrap gap-2">
+                                       {attendees.map((person, idx) => (
+                                         <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700 border border-gray-200">
+                                           <span className={`w-1.5 h-1.5 rounded-full ${
+                                             person.position === '원장' ? 'bg-red-500' :
+                                             person.position === '교사' ? 'bg-blue-500' : 'bg-gray-500'
+                                           }`}></span>
+                                           {person.name} ({person.position})
+                                         </span>
+                                       ))}
+                                     </div>
+                                  </div>
+                                </details>
+                              );
+                            })}
+                            {totalCount === 0 && <p className="text-center text-gray-400 py-4">등록된 데이터가 없습니다.</p>}
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end pt-8">
+                          <button 
+                            onClick={clearAllData}
+                            className="flex items-center gap-2 text-red-500 hover:text-red-700 text-sm font-medium px-4 py-2 hover:bg-red-50 rounded transition"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            데이터 전체 초기화
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </main>
+            </div>
+          );
+        };
+
+        // React 컴포넌트 렌더링
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ChildcareEventRegistration />);
+    </script>
+</body>
+</html>
