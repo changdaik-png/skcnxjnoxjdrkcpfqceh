@@ -42,9 +42,222 @@
         .animate-fade-in-up {
             animation: fade-in-up 0.3s ease-out;
         }
+        
+        /* 크리스마스 배경 스타일 */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .christmas-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(to bottom, #0a0e27 0%, #1a1f3a 50%, #0f1419 100%);
+            overflow: hidden;
+        }
+        
+        /* 별 애니메이션 */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        /* 눈 내리는 효과 */
+        .snowflake {
+            position: absolute;
+            color: white;
+            font-size: 1em;
+            font-family: Arial;
+            text-shadow: 0 0 5px white;
+            animation: snowfall linear infinite;
+            opacity: 0.8;
+        }
+        
+        @keyframes snowfall {
+            0% {
+                transform: translateY(-100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+        
+        /* 트리 스타일 */
+        .christmas-tree {
+            position: fixed;
+            bottom: 20px;
+            right: 30px;
+            z-index: 100;
+            width: 150px;
+            height: 200px;
+        }
+        
+        .tree-body {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 트리 층 */
+        .tree-layer {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 0;
+            border-right: 0;
+            border-bottom: 0;
+        }
+        
+        .tree-layer-1 {
+            bottom: 20px;
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 60px solid #0d5f2d;
+        }
+        
+        .tree-layer-2 {
+            bottom: 60px;
+            width: 0;
+            height: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom: 50px solid #0f7a3a;
+        }
+        
+        .tree-layer-3 {
+            bottom: 95px;
+            width: 0;
+            height: 0;
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+            border-bottom: 40px solid #119a4a;
+        }
+        
+        /* 트리 줄기 */
+        .tree-trunk {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 30px;
+            background: #8B4513;
+        }
+        
+        /* 트리 장식구 (불) */
+        .tree-light {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: light-blink 1.5s infinite;
+            box-shadow: 0 0 10px currentColor;
+        }
+        
+        @keyframes light-blink {
+            0%, 100% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+        }
+        
+        .tree-light.red { 
+            background: #ff0000;
+            color: #ff0000;
+        }
+        
+        .tree-light.blue { 
+            background: #0066ff;
+            color: #0066ff;
+        }
+        
+        .tree-light.yellow { 
+            background: #ffcc00;
+            color: #ffcc00;
+        }
+        
+        .tree-light.green { 
+            background: #00ff00;
+            color: #00ff00;
+        }
+        
+        .tree-light.purple { 
+            background: #cc00ff;
+            color: #cc00ff;
+        }
+        
+        /* 별 장식 (트리 꼭대기) */
+        .tree-star {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 25px solid #ffd700;
+            animation: star-twinkle 2s infinite;
+            filter: drop-shadow(0 0 10px #ffd700);
+        }
+        
+        .tree-star::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: -15px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #ffd700;
+        }
+        
+        @keyframes star-twinkle {
+            0%, 100% { 
+                opacity: 1;
+                transform: translateX(-50%) scale(1);
+            }
+            50% { 
+                opacity: 0.7;
+                transform: translateX(-50%) scale(1.1);
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- 크리스마스 배경 -->
+    <div class="christmas-background" id="christmas-bg"></div>
+    
+    <!-- 크리스마스 트리 -->
+    <div class="christmas-tree" id="christmas-tree"></div>
+    
     <div id="root"></div>
 
     <script type="text/babel">
@@ -52,7 +265,7 @@
 
         // Supabase 설정
         const supabaseUrl = 'https://cgatmtuvqmzxorvhusdl.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrY254am5veGpkcmtjcGZxY2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5NzMyMTMsImV4cCI6MjA3NzU0OTIxM30.OcwyqBpiNh0hrJv98ujKbr-rHCdw03fSKtDDq0s7brw';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnYXRtdHV2cW16eG9ydmh1c2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMjk5NTAsImV4cCI6MjA3OTYwNTk1MH0.uf9oGPCD0z3HEkJdurE-N76mfzHmnC0htikcbXRkHVM';
         
         // Supabase 클라이언트 (초기화는 supabaseReady Promise가 완료된 후)
         let supabase = null;
@@ -548,9 +761,9 @@
           };
 
           return (
-            <div className="min-h-screen bg-gray-50 font-sans text-gray-800 pb-20">
+            <div className="min-h-screen font-sans text-gray-800 pb-20" style={{ background: 'transparent' }}>
               {/* 헤더 */}
-              <header className="bg-indigo-600 text-white p-4 shadow-lg sticky top-0 z-10">
+              <header className="bg-indigo-600 bg-opacity-90 backdrop-blur-sm text-white p-4 shadow-lg sticky top-0 z-10">
                 <div className="max-w-3xl mx-auto flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <Users className="w-6 h-6" />
@@ -578,7 +791,7 @@
                 {/* === 탭 1: 신청 등록 === */}
                 {activeTab === 'register' && (
                   <div className="space-y-6 animate-fade-in-up">
-                    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                    <div className="bg-white bg-opacity-95 backdrop-blur-sm p-6 rounded-xl shadow-md border border-gray-100">
                       <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-gray-700">
                         <Building className="w-5 h-5 text-indigo-500" />
                         기관 정보 선택
@@ -597,7 +810,7 @@
                       </div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                    <div className="bg-white bg-opacity-95 backdrop-blur-sm p-6 rounded-xl shadow-md border border-gray-100">
                       <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-gray-700">
                         <UserPlus className="w-5 h-5 text-green-500" />
                         참석자 명단 입력
@@ -712,7 +925,7 @@
                     
                     {!isAuthenticated ? (
                       // --- 로그인 화면 ---
-                      <div className="flex flex-col items-center justify-center py-12 bg-white rounded-xl shadow-md border border-gray-100">
+                      <div className="flex flex-col items-center justify-center py-12 bg-white bg-opacity-95 backdrop-blur-sm rounded-xl shadow-md border border-gray-100">
                         <div className="bg-indigo-100 p-4 rounded-full mb-4">
                           <Lock className="w-8 h-8 text-indigo-600" />
                         </div>
@@ -781,7 +994,7 @@
                         </div>
 
                         {/* 집계 테이블 */}
-                        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                        <div className="bg-white bg-opacity-95 backdrop-blur-sm p-6 rounded-xl shadow-md border border-gray-100">
                           <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-gray-700">
                             <BarChart3 className="w-5 h-5 text-indigo-500" />
                             기관별 신청 현황
@@ -826,7 +1039,7 @@
                         </div>
 
                         {/* 상세 명단 조회 */}
-                        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                        <div className="bg-white bg-opacity-95 backdrop-blur-sm p-6 rounded-xl shadow-md border border-gray-100">
                           <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-gray-700">
                             <List className="w-5 h-5 text-gray-500" />
                             기관별 상세 명단
@@ -884,6 +1097,96 @@
             </div>
           );
         };
+
+        // 크리스마스 배경 생성 함수
+        function createChristmasBackground() {
+            const bg = document.getElementById('christmas-bg');
+            
+            // 별 생성
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 3 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 3 + 's';
+                bg.appendChild(star);
+            }
+            
+            // 눈송이 생성
+            const snowflakeSymbols = ['❄', '❅', '❆'];
+            for (let i = 0; i < 50; i++) {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.textContent = snowflakeSymbols[Math.floor(Math.random() * snowflakeSymbols.length)];
+                snowflake.style.left = Math.random() * 100 + '%';
+                snowflake.style.fontSize = Math.random() * 10 + 10 + 'px';
+                snowflake.style.animationDuration = Math.random() * 3 + 2 + 's';
+                snowflake.style.animationDelay = Math.random() * 2 + 's';
+                bg.appendChild(snowflake);
+            }
+        }
+        
+        // 크리스마스 트리 생성 함수
+        function createChristmasTree() {
+            const treeContainer = document.getElementById('christmas-tree');
+            const treeBody = document.createElement('div');
+            treeBody.className = 'tree-body';
+            
+            // 트리 층
+            const layer1 = document.createElement('div');
+            layer1.className = 'tree-layer tree-layer-1';
+            treeBody.appendChild(layer1);
+            
+            const layer2 = document.createElement('div');
+            layer2.className = 'tree-layer tree-layer-2';
+            treeBody.appendChild(layer2);
+            
+            const layer3 = document.createElement('div');
+            layer3.className = 'tree-layer tree-layer-3';
+            treeBody.appendChild(layer3);
+            
+            // 트리 줄기
+            const trunk = document.createElement('div');
+            trunk.className = 'tree-trunk';
+            treeBody.appendChild(trunk);
+            
+            // 트리 꼭대기 별
+            const star = document.createElement('div');
+            star.className = 'tree-star';
+            treeBody.appendChild(star);
+            
+            // 트리 불 장식
+            const lightPositions = [
+                { layer: 1, left: '30%', top: '40%', color: 'red' },
+                { layer: 1, left: '70%', top: '40%', color: 'blue' },
+                { layer: 1, left: '50%', top: '30%', color: 'yellow' },
+                { layer: 2, left: '35%', top: '50%', color: 'green' },
+                { layer: 2, left: '65%', top: '50%', color: 'purple' },
+                { layer: 2, left: '50%', top: '40%', color: 'red' },
+                { layer: 3, left: '40%', top: '60%', color: 'blue' },
+                { layer: 3, left: '60%', top: '60%', color: 'yellow' },
+                { layer: 3, left: '50%', top: '50%', color: 'green' },
+            ];
+            
+            lightPositions.forEach((pos, index) => {
+                const light = document.createElement('div');
+                light.className = `tree-light ${pos.color}`;
+                light.style.left = pos.left;
+                light.style.top = pos.top;
+                light.style.animationDelay = index * 0.2 + 's';
+                treeBody.appendChild(light);
+            });
+            
+            treeContainer.appendChild(treeBody);
+        }
+        
+        // 페이지 로드 시 크리스마스 배경과 트리 생성
+        window.addEventListener('DOMContentLoaded', () => {
+            createChristmasBackground();
+            createChristmasTree();
+        });
 
         // React 컴포넌트 렌더링
         const root = ReactDOM.createRoot(document.getElementById('root'));
