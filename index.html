@@ -51,7 +51,7 @@
         const { useState, useEffect } = React;
 
         // Supabase 설정
-        const supabaseUrl = 'https://skcnxjnoxjdrkcpfqceh.supabase.co';
+        const supabaseUrl = 'https://cgatmtuvqmzxorvhusdl.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrY254am5veGpkcmtjcGZxY2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5NzMyMTMsImV4cCI6MjA3NzU0OTIxM30.OcwyqBpiNh0hrJv98ujKbr-rHCdw03fSKtDDq0s7brw';
         
         // Supabase 클라이언트 (초기화는 supabaseReady Promise가 완료된 후)
@@ -263,8 +263,25 @@
             } catch (error) {
               console.error('데이터 로드 오류:', error);
               console.error('오류 스택:', error.stack);
-              // 사용자에게는 간단한 메시지만 표시
-              setRegistrations([]);
+              
+              // 네트워크 오류인 경우 특별 처리
+              if (error.message && (
+                error.message.includes('ERR_NAME_NOT_RESOLVED') ||
+                error.message.includes('Failed to fetch') ||
+                error.message.includes('NetworkError') ||
+                error.message.includes('network')
+              )) {
+                console.error('네트워크 연결 오류: Supabase 서버에 연결할 수 없습니다.');
+                console.error('가능한 원인:');
+                console.error('1. 네트워크 연결 확인');
+                console.error('2. Supabase 프로젝트가 일시 중지되었는지 확인 (대시보드에서 확인)');
+                console.error('3. Supabase URL이 올바른지 확인:', supabaseUrl);
+                // 사용자에게는 조용히 처리 (오류 메시지 표시 안 함)
+                setRegistrations([]);
+              } else {
+                // 다른 오류는 기존대로 처리
+                setRegistrations([]);
+              }
             } finally {
               setLoading(false);
             }
@@ -396,7 +413,18 @@
               alert(`${selectedInst}의 명단 ${dataToInsert.length}명이 성공적으로 등록되었습니다.`);
             } catch (error) {
               console.error('저장 오류:', error);
-              alert(`데이터 저장 중 오류가 발생했습니다: ${error.message}\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인해주세요.`);
+              
+              // 네트워크 오류인 경우 특별 처리
+              if (error.message && (
+                error.message.includes('ERR_NAME_NOT_RESOLVED') ||
+                error.message.includes('Failed to fetch') ||
+                error.message.includes('NetworkError') ||
+                error.message.includes('network')
+              )) {
+                alert('네트워크 연결 오류가 발생했습니다.\n\nSupabase 서버에 연결할 수 없습니다.\n\n확인 사항:\n1. 인터넷 연결 확인\n2. Supabase 프로젝트가 활성화되어 있는지 확인 (대시보드에서 확인)\n3. 페이지를 새로고침해주세요');
+              } else {
+                alert(`데이터 저장 중 오류가 발생했습니다: ${error.message}\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인해주세요.`);
+              }
             } finally {
               setLoading(false);
             }
